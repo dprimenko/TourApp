@@ -7,7 +7,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -89,14 +91,8 @@ public class ListPoiFragment extends Fragment {
             }
         });
 
-        lwListPoi.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        registerForContextMenu(lwListPoi);
 
-                makeAlertDelete(parent, position).show();
-                return true;
-            }
-        });
         adapter = new PoiAdapter(getActivity(), R.layout.item_poi, RepositoryImpl.getInstance().getAllProducts());
         try {
             poiReceived = getArguments().getParcelable("poi_key");
@@ -107,7 +103,7 @@ public class ListPoiFragment extends Fragment {
         lwListPoi.setAdapter(adapter);
     }
 
-    private AlertDialog.Builder makeAlertDelete(final AdapterView<?> parent, final int position) {
+    private AlertDialog.Builder makeAlertDelete(final AdapterView.AdapterContextMenuInfo info) {
         AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getActivity());
 
         alertBuilder.setCancelable(true);
@@ -116,7 +112,7 @@ public class ListPoiFragment extends Fragment {
         alertBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Poi poi = (Poi)parent.getItemAtPosition(position);
+                Poi poi = adapter.getItem(info.position);
                 adapter.deletePoi(poi);
             }
         });
@@ -127,6 +123,28 @@ public class ListPoiFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        getActivity().getMenuInflater().inflate(R.menu.context_menu, menu);
+        super.onCreateContextMenu(menu, v, menuInfo);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+        switch (item.getItemId()) {
+            case R.id.action_delete_poi:
+                makeAlertDelete(info).show();
+                break;
+            case R.id.action_rate_poi:
+                break;
+        }
+
+        return super.onContextItemSelected(item);
     }
 
     @Override
